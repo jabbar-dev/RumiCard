@@ -1,9 +1,15 @@
-#include "../include/GameManager.h"
-#include <iostream>
+#include <wx/wx.h>
+#include "MainFrame.h"
 
-int main() {
-    std::cout << "Welcome to Rumi Card Game!\n";
-    GameManager gameManager;
-    gameManager.playGame();
-    return 0;
+class RumiApp : public wxApp {
+public:
+    virtual bool OnInit();
+};
+
+wxIMPLEMENT_APP(RumiApp);
+
+bool RumiApp::OnInit() {
+    MainFrame* frame = new MainFrame("Rumi Card Game");
+    frame->Show(true);
+    return true;
 }

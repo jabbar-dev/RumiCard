@@ -13,8 +13,12 @@ private:
     Deck deck;
     Player player;
     Player computer;
+
     int playerScore = 0;
     int computerScore = 0;
+
+    int gameLimit = 200; // Default score limit, set at runtime
+    int penalty = 30;    // Default penalty for incorrect showdown, set at runtime
 
     void playerTurn();
     void computerTurn();

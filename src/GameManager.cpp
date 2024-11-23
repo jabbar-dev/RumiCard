@@ -5,6 +5,13 @@
 #include <ctime>
 
 GameManager::GameManager() {
+    // Ask the user for the game limit and penalty
+    std::cout << "Enter the game score limit (e.g., 200): ";
+    std::cin >> gameLimit;
+
+    std::cout << "Enter the penalty for an incorrect showdown (e.g., 30): ";
+    std::cin >> penalty;
+
     // Initialize the deck and deal 4 cards to each player
     for (int i = 0; i < 4; ++i) {
         player.drawCard(deck.drawCard());
@@ -13,7 +20,7 @@ GameManager::GameManager() {
 }
 
 void GameManager::playGame() {
-    while (true) {
+    while (playerScore < gameLimit && computerScore < gameLimit) {
         // Display player's hand
         std::cout << "\nYour hand:\n";
         int index = 0;
@@ -21,33 +28,43 @@ void GameManager::playGame() {
             std::cout << ++index << ": " << card.rank << " of " << card.suit << "\n";
         }
 
+        // Display total hand value
+        std::cout << "Your total hand value: " << player.calculateHandValue() << "\n";
+
         // Player's turn
         playerTurn();
+
+        // Display computer's total hand value
+        std::cout << "Computer's total hand value: " << computer.calculateHandValue() << "\n";
 
         // Computer's turn
         computerTurn();
 
-        // Ask if the player wants to call a showdown
-        char choice;
-        std::cout << "\nDo you want to call a showdown? (y/n): ";
-        std::cin >> choice;
-        if (choice == 'y') {
-            showdown();
+        // Check if the game is over
+        if (playerScore >= gameLimit || computerScore >= gameLimit) {
             break;
         }
+    }
+
+    // Determine the loser
+    if (playerScore >= gameLimit) {
+        std::cout << "\nYou reached the score limit of " << gameLimit << "! You lose!\n";
+    } else if (computerScore >= gameLimit) {
+        std::cout << "\nThe computer reached the score limit of " << gameLimit << "! You win!\n";
     }
 }
 
 void GameManager::playerTurn() {
     std::cout << "\nPlayer's Turn:\n";
-    std::cout << "1. Replace a card from the hidden deck\n";
-    std::cout << "2. Keep your current hand\n";
+    std::cout << "1. Pick a new card and replace one in your hand\n";
+    std::cout << "2. Call a showdown\n";
     std::cout << "Enter your choice (1 or 2): ";
 
     int choice;
     std::cin >> choice;
 
     if (choice == 1) {
+        // Replace a card from the deck
         std::cout << "Choose a card to replace (1-" << player.getHand().size() << "): ";
         int replaceIndex;
         std::cin >> replaceIndex;
@@ -61,8 +78,12 @@ void GameManager::playerTurn() {
         } else {
             std::cout << "Invalid choice. Skipping replacement.\n";
         }
+    } else if (choice == 2) {
+        // Player decides to call a showdown
+        showdown();
+        return;
     } else {
-        std::cout << "You decided to keep your hand.\n";
+        std::cout << "Invalid choice. Please try again.\n";
     }
 }
 
@@ -72,17 +93,12 @@ void GameManager::computerTurn() {
     // Display a random funny comment
     displayFunnyComment();
 
-    // Basic logic: randomly decide to replace a card or keep the hand
-    bool replace = (std::rand() % 2 == 0);
-    if (replace) {
-        int replaceIndex = std::rand() % computer.getHand().size();
-        deck.addToDiscardPile(computer.getHand()[replaceIndex]);
-        computer.getHand()[replaceIndex] = deck.drawCard(); // Uses the non-const getHand()
+    // Basic logic: Computer always replaces a card
+    int replaceIndex = std::rand() % computer.getHand().size();
+    deck.addToDiscardPile(computer.getHand()[replaceIndex]);
+    computer.getHand()[replaceIndex] = deck.drawCard();
 
-        std::cout << "Computer replaces a card.\n";
-    } else {
-        std::cout << "Computer decides to keep its hand.\n";
-    }
+    std::cout << "Computer replaces a card.\n";
 }
 
 void GameManager::showdown() {
@@ -99,9 +115,11 @@ void GameManager::showdown() {
     if (playerValue < computerValue) {
         std::cout << "You win this round!\n";
         computerScore += computerValue;
+    } else if (playerValue > computerValue) {
+        std::cout << "Computer wins this round, and you get a penalty of " << penalty << " points!\n";
+        playerScore += playerValue + penalty;
     } else {
-        std::cout << "Computer wins this round!\n";
-        playerScore += playerValue;
+        std::cout << "It's a tie! Both scores remain unchanged.\n";
     }
 
     std::cout << "Current Scores:\n";
@@ -109,10 +127,18 @@ void GameManager::showdown() {
     std::cout << "Computer: " << computerScore << "\n";
 
     // Check if the game is over
-    if (playerScore >= 100) {
-        std::cout << "Computer wins the game!\n";
-    } else if (computerScore >= 100) {
-        std::cout << "You win the game!\n";
+    if (playerScore >= gameLimit) {
+        std::cout << "\nYou reached the score limit of " << gameLimit << "! You lose!\n";
+    } else if (computerScore >= gameLimit) {
+        std::cout << "\nThe computer reached the score limit of " << gameLimit << "! You win!\n";
+    }
+
+    // Restart hands for the next round
+    player.getHand().clear();
+    computer.getHand().clear();
+    for (int i = 0; i < 4; ++i) {
+        player.drawCard(deck.drawCard());
+        computer.drawCard(deck.drawCard());
     }
 }
 
